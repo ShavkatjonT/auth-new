@@ -1,9 +1,9 @@
 const ApiError = require("../error/ApiError");
 const { User, Product, Category } = require("../models/models");
-import validateFun from "./validateFun";
+const validateFun = require('./validateFun')
 
 class CategoryControl {
-    async add(req, res, next) {
+    async categoryAdd(req, res, next) {
         try {
             const { name, description, status, } = req.body;
 
@@ -24,56 +24,90 @@ class CategoryControl {
             return next(ApiError.badRequest(error));
         }
     }
-    async delete(req, res, next) {
-        const { id } = req.params;
-        if (!validateFun.isValidUUID(id)) {
-            return next(ApiError.badRequest("The data was entered incorrectly"));
-        }
-        const category = await Category.findOne({
-            where: {
-                id,
-                status_main: 'active'
+    async categoryDelete(req, res, next) {
+        try {
+            const { id } = req.params;
+            if (!validateFun.isValidUUID(id)) {
+                return next(ApiError.badRequest("The data was entered incorrectly"));
             }
-        });
+            const category = await Category.findOne({
+                where: {
+                    id,
+                    status_main: 'active'
+                }
+            });
 
-        if (!category) {
-            return next(
-                ApiError.badRequest('Malumotlar topilmadi')
-            );
-        };
-        category.status_main = 'inactive'
-        await category.save();
+            if (!category) {
+                return next(
+                    ApiError.badRequest('Malumotlar topilmadi')
+                );
+            };
+            category.status_main = 'inactive'
+            await category.save();
 
-        return res.send(`${category.name} katego'rya o'chirildi`)
+            return res.send(`${category.name} katego'rya o'chirildi`)
+        } catch (error) {
+            console.log(10, error.stack);
+            return next(ApiError.badRequest(error));
+        }
+
+
 
     }
-    async put(req, res, next) {
+    async categoryPut(req, res, next) {
 
-        const { id } = req.params;
-        const { name, description, status, } = req.body;
-        if (!validateFun.isValidUUID(id)) {
-            return next(ApiError.badRequest("The data was entered incorrectly"));
-        }
-        const category = await Category.findOne({
-            where: {
-                id,
-                status_main: 'active'
+        try {
+            const { id } = req.params;
+            const { name, description, status, } = req.body;
+            if (!validateFun.isValidUUID(id)) {
+                return next(ApiError.badRequest("The data was entered incorrectly"));
             }
-        });
-        if (!category) {
-            return next(
-                ApiError.badRequest('Malumotlar topilmadi')
-            );
-        };
+            const category = await Category.findOne({
+                where: {
+                    id,
+                    status_main: 'active'
+                }
+            });
+            if (!category) {
+                return next(
+                    ApiError.badRequest('Malumotlar topilmadi')
+                );
+            };
 
-        if (name) category.name = name;
-        if (description) category.description = description;
-        if (status) category.status = status;
-        await category.save();
-        return res.json(category);
+            if (name) category.name = name;
+            if (description) category.description = description;
+            if (status) category.status = status;
+            await category.save();
+            return res.json(category);
+
+        } catch (error) {
+            console.log(10, error.stack);
+            return next(ApiError.badRequest(error));
+        }
     }
+    async categoryGetList(req, res, next) {
+        try {
+            const category = await Category.findAll({
+                where: {
+                    status_main: 'active'
+                }
+            });
+            const resData = category.map((el) => {
+                return {
+                    id: el.id,
+                    name: el.name,
+                    description: el.description,
+                    status: el.status
+                }
+            }).fill((el) => el && el);
 
+            return res.json(resData)
 
+        } catch (error) {
+            console.log(10, error.stack);
+            return next(ApiError.badRequest(error));
+        }
+    }
 }
-
 module.exports = new CategoryControl();
+
