@@ -108,6 +108,32 @@ class CategoryControl {
             return next(ApiError.badRequest(error));
         }
     }
+
+    async getOne(req, res, next) {
+        try {
+            const { id } = req.params;
+            if (!validateFun.isValidUUID(id)) {
+                return next(ApiError.badRequest("The data was entered incorrectly"));
+            }
+
+            const category = await Category.findOne({
+                where: {
+                    status_main: "active",
+                    id
+                }
+            })
+
+            if (!category) {
+                return next(
+                    ApiError.badRequest('Malumotlar toplimadi')
+                )
+            };
+
+            return res.json(category);
+        } catch (error) {
+
+        }
+    }
 }
 module.exports = new CategoryControl();
 
